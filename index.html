@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ITF Technique Builder — Valid Combos (No “Checking” Modifier)</title>
+<style>
+  :root{color-scheme:light dark}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",sans-serif;background:#0b1220;color:#eef2ff}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .card{background:#0f172a;border:1px solid #1f2937;border-radius:16px;padding:16px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:960px){.grid-2{grid-template-columns:1fr 1fr}}
+  h1{font-size:22px;margin:6px 0} h2{font-size:18px;margin:0 0 8px}
+  label{display:block;margin:8px 0 0}
+  select{width:100%;background:#111827;color:#e5e7eb;border:1px solid #1f2937;border-radius:12px;padding:10px}
+  .muted{color:#cbd5e1}.small{font-size:12px}
+  .badge{display:inline-block;padding:6px 8px;border:1px solid #1f2937;border-radius:10px;font-size:12px}
+  .checkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .check{padding:8px;border:1px solid #1f2937;border-radius:10px;background:#0b1220;font-size:12px}
+  .out{background:#0b1220;border:1px solid #1f2937;border-radius:12px;padding:12px;margin-top:8px}
+  .disabled{opacity:.6;pointer-events:none}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ITF Technique Builder</h1>
+  </header>
+
+  <div class="grid grid-2" style="margin-top:12px">
+    <section class="card">
+      <h2>Build</h2>
+
+      <!-- STANCE -->
+      <label>Stance (optional)
+        <select id="stance"><option value="">Choose…</option></select>
+      </label>
+
+      <!-- ACTION FAMILY -->
+      <label>Action
+        <select id="family"><option value="">Choose…</option></select>
+      </label>
+
+      <!-- BLOCKS -->
+      <div id="blockWrap" class="disabled">
+        <div class="row2">
+          <label>Block type
+            <select id="blockType" disabled><option value="">Choose…</option></select>
+          </label>
+          <label id="blockDirWrap" class="disabled">Direction (blocks)
+            <select id="blockDir" disabled><option value="">(n/a)</option></select>
+          </label>
+        </div>
+        <div class="row2">
+          <label id="blockToolWrap" class="disabled">Block tool
+            <select id="blockTool" disabled><option value="">(n/a)</option></select>
+          </label>
+          <label id="blockVarWrap" class="disabled">Tool variant
+            <select id="blockVar" disabled><option value="">(n/a)</option></select>
+          </label>
+        </div>
+      </div>
+
+      <!-- STRIKES -->
+      <div id="strikeWrap" class="disabled">
+        <div class="row2">
+          <label>Strike tool
+            <select id="strikeTool" disabled><option value="">Choose…</option></select>
+          </label>
+          <label id="strikeDirWrap" class="disabled">Direction (strikes)
+            <select id="strikeDir" disabled><option value="">(n/a)</option></select>
+          </label>
+        </div>
+      </div>
+
+      <!-- PUNCHES -->
+      <div id="punchWrap" class="disabled">
+        <div class="row2">
+          <label>Punch style
+            <select id="punchStyle" disabled><option value="">Choose…</option></select>
+          </label>
+          <label>Punch tool
+            <select id="punchTool" disabled><option value="">Choose…</option></select>
+          </label>
+        </div>
+      </div>
+
+      <!-- THRUSTS -->
+      <div id="thrustWrap" class="disabled">
+        <div class="row2">
+          <label>Thrust style
+            <select id="thrustStyle" disabled><option value="">Choose…</option></select>
+          </label>
+          <label>Thrust tool
+            <select id="thrustTool" disabled><option value="">Choose…</option></select>
+          </label>
+        </div>
+      </div>
+
+      <!-- KICKS -->
+      <div id="kickWrap" class="disabled">
+        <div class="row2">
+          <label>Kick type
+            <select id="kickType" disabled><option value="">Choose…</option></select>
+          </label>
+          <label id="kickToolWrap" class="disabled">Foot tool (kicks)
+            <select id="kickTool" disabled><option value="">(n/a)</option></select>
+          </label>
+        </div>
+      </div>
+
+      <!-- HEIGHT -->
+      <label id="heightWrap">Height
+        <select id="heightSel"><option value="">Choose…</option></select>
+      </label>
+
+      <!-- MODIFIERS -->
+      <div style="margin-top:8px">
+        <div class="badge">Modifiers</div>
+        <div id="modifiers" class="checkgrid"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Output</h2>
+      <div class="out"><strong>English:</strong> <span id="outEN" class="muted">—</span></div>
+      <div class="out"><strong>Romanised:</strong> <span id="outROM" class="muted">—</span></div>
+      <div class="out"><strong>Hangul:</strong> <span id="outHAN" class="muted">—</span></div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ================== DATA ================== */
+const STANCES = [
+  { en:"Walking", rom:"Gunnun", han:"걷는" },
+  { en:"L-", rom:"Niunja", han:"ㄴ자" },
+  { en:"Sitting", rom:"Annun", han:"앉는" },
+  { en:"Parallel", rom:"Narani", han:"나란히" },
+  { en:"Fixed", rom:"Gojung", han:"고정" },
+  { en:"Closed", rom:"Moa", han:"모아" },
+  { en:"X-", rom:"Kyocha", han:"교차" },
+  { en:"Rear foot", rom:"Dwitbal", han:"뒷발" },
+  { en:"Vertical", rom:"Soojik", han:"수직" },
+  { en:"Bending-ready", rom:"Goburyo junbi", han:"구부려 준비" },
+  { en:"One-leg", rom:"Waebal", han:"외발" }
+];
+
+const HEIGHTS = [
+  { en:"High",   rom:"Nopunde", han:"높은데" },
+  { en:"Middle", rom:"Kaunde",  han:"가운데" },
+  { en:"Low",    rom:"Najunde", han:"낮은데" }
+];
+
+const DIR_ALL = [
+  { key:"inward",  en:"Inward",   rom:"Anuro",    han:"안으로" },
+  { key:"outward", en:"Outward",  rom:"Bakaturo", han:"바깥으로" },
+  { key:"upward",  en:"Upward",   rom:"Ollyo",    han:"올려" },
+  { key:"downward",en:"Downward", rom:"Naeryo",   han:"내려" },
+  { key:"rising",  en:"Rising",   rom:"Chookyo",  han:"축여" }
+];
+
+/* Block tool bases + variants */
+const BLOCK_TOOL_BASES = [
+  { key:"forearm", en:"Forearm", rom:"Palmok", han:"팔목", variants:[
+      { key:"inner",  en:"Inner",  rom:"An",     han:"안" },
+      { key:"outer",  en:"Outer",  rom:"Bakat",  han:"바깥" }
+    ]},
+  { key:"knifehand", en:"Knifehand", rom:"Sonkal", han:"손칼", variants:[
+      { key:"normal", en:"Normal", rom:"",         han:"" },
+      { key:"reverse",en:"Reverse",rom:"Sonkal dung", han:"손칼 등", replaceBase:true }
+    ]},
+  { key:"palm", en:"Palm", rom:"Sonbadak", han:"손바닥", variants:[
+      { key:"normal", en:"Normal", rom:"Sonbadak",      han:"손바닥", replaceBase:true },
+      { key:"reverse",en:"Reverse",rom:"Sonbadak dung", han:"손바닥 등", replaceBase:true }
+    ]},
+  { key:"fist", en:"Fist (X-fist only)", rom:"Joomuk", han:"주먹", variants:[
+      { key:"xonly", en:"(X-shape only)", rom:"", han:"" }
+    ]}
+];
+
+/* Strike tools */
+const STRIKE_TOOLS = [
+  { key:"elbow",          en:"Elbow",           rom:"Palkup",         han:"팔굽" },
+  { key:"knifehand",      en:"Knifehand",       rom:"Sonkal",         han:"손칼" },
+  { key:"rev_knifehand",  en:"Reverse knifehand", rom:"Sonkal dung",  han:"손칼 등" },
+  { key:"backfist",       en:"Backfist",        rom:"Dung joomuk",    han:"등 주먹" },
+  { key:"backhand",       en:"Backhand",        rom:"Dung son",       han:"등손" },
+  { key:"palm",           en:"Palm",            rom:"Sonbadak",       han:"손바닥" },
+  { key:"rev_palm",       en:"Reverse palm",    rom:"Sonbadak dung",  han:"손바닥 등" },
+  { key:"arc_hand",       en:"Arc hand",        rom:"Bandal son",     han:"반달손" }
+];
+
+/* Punch styles + tool */
+const PUNCH_STYLES = [
+  { key:"standard", en:"Punch",           rom:"Jirugi",        han:"지르기" },
+  { key:"uppercut", en:"Uppercut punch",  rom:"Ollyo jirugi",  han:"올려 지르기" },
+  { key:"vertical", en:"Vertical punch",  rom:"Sewo jirugi",   han:"세워 지르기" },
+  { key:"hooking",  en:"Hooking punch",   rom:"Golcho jirugi", han:"걸초 지르기" }
+];
+const PUNCH_TOOLS = [
+  { key:"forefist", en:"Forefist", rom:"Ap joomuk", han:"앞 주먹" }
+];
+
+/* Thrust styles + tools */
+const THRUST_STYLES = [
+  { key:"standard", en:"Thrust",                 rom:"Tulgi",                 han:"찌르기" },
+  { key:"upset",    en:"Upset fingertip thrust", rom:"Dwijibo sonkut tulgi", han:"뒤집어 손끝 찌르기" }
+];
+const THRUST_TOOLS = [
+  { key:"fingertips",     en:"Fingertips",     rom:"Sonkut",       han:"손끝" },
+  { key:"flat_fingertip", en:"Flat fingertip", rom:"Opun sonkut",  han:"오픈 손끝" }
+];
+
+/* Kicks + foot tools */
+const KICKS = [
+  { key:"front",   en:"Front kick",   rom:"Ap chagi",        han:"앞 차기",   feet:["ball","instep"] },
+  { key:"side",    en:"Side kick",    rom:"Yop chagi",       han:"옆 차기",   feet:["footsword"] },
+  { key:"turning", en:"Turning kick", rom:"Dollyo chagi",    han:"돌려 차기", feet:["instep","ball"] },
+  { key:"back",    en:"Back kick",    rom:"Dwit chagi",      han:"뒷 차기",   feet:[] },
+  { key:"revturn", en:"Reverse turning kick", rom:"Bandae dollyo chagi", han:"반대 돌려 차기", feet:["instep","ball"] },
+  { key:"hook",    en:"Hook kick",    rom:"Golcho chagi",    han:"걸초 차기", feet:["footsword"] },
+  { key:"axe",     en:"Axe kick",     rom:"Naeryo chagi",    han:"내려 차기", feet:[] },
+  { key:"twist",   en:"Twisting kick",rom:"Bituro chagi",    han:"비틀어 차기", feet:["footsword"] },
+  { key:"stamp",   en:"Stamping kick",rom:"Cha bapgi",       han:"차밟기",   feet:[] },
+  { key:"push",    en:"Pushing kick", rom:"Miro chagi",      han:"밀어 차기", feet:["ball"] },
+  { key:"check",   en:"Checking kick",rom:"Momchau chagi",   han:"멈춰 차기", feet:[] }
+];
+const FOOT_TOOLS = [
+  { key:"ball",      en:"Ball of foot", rom:"Ap kumchi", han:"앞금치" },
+  { key:"instep",    en:"Instep",       rom:"Baldung",   han:"발등" },
+  { key:"footsword", en:"Footsword",    rom:"Balkal",    han:"발칼" }
+];
+
+/* Block types + rules */
+const BLOCK_TYPES = [
+  { key:"standard", en:"Block",        rom:"Makgi",         han:"막기",     dir:true,  tool:true,
+    allowedTools:["forearm","knifehand","palm"] },
+  { key:"pressing", en:"Pressing block", rom:"Noollo makgi",han:"눌러 막기", dir:false, tool:true,
+    allowedTools:["palm","fist"] }, // fist -> X-fist pressing block (auto)
+  { key:"sweeping", en:"Sweeping block", rom:"Duro makgi",  han:"들어 막기", dir:true,  tool:true,
+    allowedTools:["forearm"] },
+  { key:"checking", en:"Checking block", rom:"Momchau makgi",dir:false, tool:true,
+    allowedTools:["palm"] },
+  { key:"guarding", en:"Guarding block", rom:"Daebi makgi", han:"대비 막기", dir:false, tool:true,
+    allowedTools:["forearm","knifehand"] },
+  { key:"circular", en:"Circular block", rom:"Dollimyo makgi", han:"돌림요 막기", dir:true, tool:true,
+    allowedTools:["forearm","knifehand"] },
+  { key:"wshape",   en:"W-shape block", rom:"San makgi",    han:"산 막기",   dir:false, tool:false },
+  { key:"ushape",   en:"U-shape block", rom:"Digutja makgi",han:"디귿자 막기",dir:false, tool:false },
+  { key:"wedging",  en:"Wedging block", rom:"Hetchyo makgi",han:"해쵸 막기", dir:false, tool:false },
+  { key:"nineshape",en:"9-shape block", rom:"Gutja makgi",  han:"구자 막기", dir:false, tool:false }
+];
+
+const DIR_ALLOWED = {
+  block:["inward","outward","upward","downward","rising"],
+  strike:["upward","downward"],
+  punch:[],
+  thrust:[],
+  kick:[]
+};
+
+/* Modifiers (ONLY flying + reverse) */
+const MODS = [
+  { key:"flying",   en:"Flying",   rom:"Twimyo",  han:"뛰며" },
+  { key:"reverse",  en:"Reverse",  rom:"Bandae",  han:"반대" }
+];
+
+/* ================== STATE ================== */
+const $ = id => document.getElementById(id);
+const stanceSel=$("stance"), familySel=$("family");
+
+const blockWrap=$("blockWrap"), blockTypeSel=$("blockType"), blockDirWrap=$("blockDirWrap"), blockDirSel=$("blockDir");
+const blockToolWrap=$("blockToolWrap"), blockToolSel=$("blockTool"), blockVarWrap=$("blockVarWrap"), blockVarSel=$("blockVar");
+
+const strikeWrap=$("strikeWrap"), strikeToolSel=$("strikeTool"), strikeDirWrap=$("strikeDirWrap"), strikeDirSel=$("strikeDir");
+
+const punchWrap=$("punchWrap"), punchStyleSel=$("punchStyle"), punchToolSel=$("punchTool");
+
+const thrustWrap=$("thrustWrap"), thrustStyleSel=$("thrustStyle"), thrustToolSel=$("thrustTool");
+
+const kickWrap=$("kickWrap"), kickTypeSel=$("kickType"), kickToolWrap=$("kickToolWrap"), kickToolSel=$("kickTool");
+
+const heightSel=$("heightSel");
+
+const outEN=$("outEN"), outROM=$("outROM"), outHAN=$("outHAN"), modsBox=$("modifiers");
+
+const state = {
+  stance:null, family:null,
+  blockType:null, blockTool:null, blockVar:null, blockDir:null,
+  strikeTool:null, strikeDir:null,
+  punchStyle:null, punchTool:null,
+  thrustStyle:null, thrustTool:null,
+  kickType:null, kickTool:null,
+  height:null,
+  mods:{ flying:false, reverse:false }
+};
+
+/* ================== HELPERS ================== */
+function fillOptions(sel, arr, lab){
+  const first = sel.querySelector("option");
+  sel.innerHTML=""; if(first) sel.appendChild(first.cloneNode(true));
+  arr.forEach((x,i)=>{ const o=document.createElement("option"); o.value=String(i); o.textContent=lab(x,i); sel.appendChild(o); });
+  if(sel === heightSel && state.height!=null){ sel.value = String(state.height); }
+}
+function filterDirections(keys){ return DIR_ALL.filter(d=>keys.includes(d.key)); }
+function allowedBlockDirections(typeKey){
+  return (typeKey==="standard"||typeKey==="sweeping"||typeKey==="circular") ? ["inward","outward","upward","downward","rising"] : [];
+}
+function blockAllowedToolBases(typeKey){
+  const t = BLOCK_TYPES.find(b=>b.key===typeKey);
+  return (!t || !t.tool) ? [] : t.allowedTools.slice();
+}
+function safeJoin(words, sep=" "){
+  return words.filter(w => typeof w === "string" && w.trim().length>0).join(sep).replace(/\s+/g," ").trim();
+}
+
+/* ================== OUTPUT ================== */
+function blockToolPhrase(toolKey, varKey){
+  const base = BLOCK_TOOL_BASES.find(t=>t.key===toolKey);
+  if(!base) return {en:"",rom:"",han:""};
+  const v = (base.variants||[]).find(v=>v.key===varKey) || null;
+
+  if(toolKey==="forearm"){
+    if(!v) return { en:"Forearm", rom:"Palmok", han:"팔목" };
+    if(v.key==="inner") return { en:"Inner forearm", rom:"An palmok", han:"안 팔목" };
+    if(v.key==="outer") return { en:"Outer forearm", rom:"Bakat palmok", han:"바깥 팔목" };
+  }
+  if(toolKey==="knifehand"){
+    if(!v || v.key==="normal") return { en:"Knifehand", rom:"Sonkal", han:"손칼" };
+    if(v.key==="reverse") return { en:"Reverse knifehand", rom:"Sonkal dung", han:"손칼 등" };
+  }
+  if(toolKey==="palm"){
+    if(!v || v.key==="normal") return { en:"Palm", rom:"Sonbadak", han:"손바닥" };
+    if(v.key==="reverse") return { en:"Reverse palm", rom:"Sonbadak dung", han:"손바닥 등" };
+  }
+  if(toolKey==="fist"){
+    return { en:"Fist", rom:"Joomuk", han:"주먹" }; // X-fist pressing
+  }
+  return {en:"",rom:"",han:""};
+}
+
+function buildOutput(){
+  // If flying is on and family is kick, we suppress stance in output
+  const includeStance = !(state.mods.flying && state.family==="kick");
+  const stance = includeStance && (state.stance!=null) ? STANCES[state.stance] : null;
+
+  const mEN=[], mROM=[], mHAN=[];
+  if(state.mods.flying && state.family==="kick"){  mEN.push("Flying");  mROM.push("Twimyo");  mHAN.push("뛰며"); }
+  const reverseOK = !!(stance && (state.family==="punch"||state.family==="strike"||state.family==="thrust"));
+  if(state.mods.reverse && reverseOK){ mEN.push("Reverse"); mROM.push("Bandae"); mHAN.push("반대"); }
+
+  const H = (state.height!=null) ? HEIGHTS[state.height] : null;
+  const H_en = H?.en || "";
+  const H_rom = H?.rom || "";
+  const H_han = H?.han || "";
+
+  if(state.family==="kick"){
+    if(state.kickType==null) return {en:"—",rom:"—",han:"—"};
+    const kt = KICKS[state.kickType];
+    const foot = (state.kickTool!=null) ? FOOT_TOOLS.filter(f=>kt.feet.includes(f.key))[state.kickTool] : null;
+
+    let enCore = safeJoin([ mEN.join(" "), H_en, kt.en ]);
+    let romCore= safeJoin([ mROM.join(" "), H_rom, kt.rom ]);
+    let hanCore= safeJoin([ mHAN.join(" "), H_han, kt.han ]);
+
+    if(foot){ enCore += ` (${foot.en})`; romCore += ` (${foot.rom})`; hanCore += ` (${foot.han})`; }
+    return { en: enCore || "—", rom: romCore || "—", han: hanCore || "—" };
+  }
+
+  if(state.family==="block"){
+    if(state.blockType==null) return {en:"—",rom:"—",han:"—"};
+    const bt = BLOCK_TYPES[state.blockType];
+    const D = (state.blockDir!=null) ? filterDirections(allowedBlockDirections(bt.key))[state.blockDir] : null;
+
+    let tp = {en:"",rom:"",han:""};
+    if(bt.tool){
+      const allowed = blockAllowedToolBases(bt.key);
+      const base = (state.blockTool!=null) ? BLOCK_TOOL_BASES.filter(t=>allowed.includes(t.key))[state.blockTool] : null;
+      const v = (base && base.variants && state.blockVar!=null) ? base.variants[state.blockVar] : null;
+      tp = blockToolPhrase(base ? base.key : null, v ? v.key : null);
+    }
+
+    // Guarding block specific naming by tool
+    let enAct = bt.en, romAct = bt.rom, hanAct = bt.han;
+    if(bt.key==="guarding" && tp.en){
+      if(tp.en.startsWith("Forearm")){ romAct="Palmok daebi makgi"; hanAct="팔목 대비 막기"; }
+      if(tp.en.startsWith("Knifehand")){ romAct="Sonkal daebi makgi"; hanAct="손칼 대비 막기"; }
+    }
+    // Pressing block with fist → X-fist pressing block (tool absorbed)
+    if(bt.key==="pressing" && tp.en==="Fist"){
+      enAct="X-fist pressing block"; romAct="Kyocha joomuk noollo makgi"; hanAct="교차 주먹 눌러 막기";
+      tp = {en:"",rom:"",han:""};
+    }
+
+    const enCore = safeJoin([ mEN.join(" "), H_en, D?.en||"", tp.en||"", enAct ]);
+    const romCore= safeJoin([ mROM.join(" "), H_rom, D?.rom||"", tp.rom||"", romAct ]);
+    const hanCore= safeJoin([ mHAN.join(" "), H_han, D?.han||"", tp.han||"", hanAct ]);
+
+    const en = safeJoin([ stance ? (stance.en+" stance") : "", ",", enCore ], " ");
+    const rom = safeJoin([ stance ? (stance.rom+" sogi") : "", romCore ], ", ");
+    const han = safeJoin([ stance ? (stance.han+" 서기")  : "", hanCore ], ", ");
+    return { en, rom, han };
+  }
+
+  if(state.family==="strike"){
+    if(state.strikeTool==null) return {en:"—",rom:"—",han:"—"};
+    const tool = STRIKE_TOOLS[state.strikeTool];
+    const D = (state.strikeDir!=null) ? filterDirections(DIR_ALLOWED.strike)[state.strikeDir] : null;
+
+    const enCore = safeJoin([ mEN.join(" "), H_en, D?.en||"", tool.en+" strike" ]);
+    const romCore= safeJoin([ mROM.join(" "), H_rom, D?.rom||"", tool.rom, "taerigi" ]);
+    const hanCore= safeJoin([ mHAN.join(" "), H_han, D?.han||"", tool.han, "때리기" ]);
+
+    const en = safeJoin([ stance ? (stance.en+" stance") : "", ",", enCore ], " ");
+    const rom = safeJoin([ stance ? (stance.rom+" sogi") : "", romCore ], ", ");
+    const han = safeJoin([ stance ? (stance.han+" 서기")  : "", hanCore ], ", ");
+    return { en, rom, han };
+  }
+
+  if(state.family==="punch"){
+    if(state.punchStyle==null || state.punchTool==null) return {en:"—",rom:"—",han:"—"};
+    const sty = PUNCH_STYLES[state.punchStyle];
+    const tool = PUNCH_TOOLS[state.punchTool];
+    const enCore = safeJoin([ mEN.join(" "), H_en, tool.en, sty.en ]);
+    const romCore= safeJoin([ mROM.join(" "), H_rom, tool.rom, sty.rom ]);
+    const hanCore= safeJoin([ mHAN.join(" "), H_han, tool.han, sty.han ]);
+    const en = safeJoin([ stance ? (stance.en+" stance") : "", ",", enCore ], " ");
+    const rom = safeJoin([ stance ? (stance.rom+" sogi") : "", romCore ], ", ");
+    const han = safeJoin([ stance ? (stance.han+" 서기")  : "", hanCore ], ", ");
+    return { en, rom, han };
+  }
+
+  if(state.family==="thrust"){
+    if(state.thrustStyle==null || state.thrustTool==null) return {en:"—",rom:"—",han:"—"};
+    const sty = THRUST_STYLES[state.thrustStyle];
+    const tool = THRUST_TOOLS[state.thrustTool];
+    const enCore = safeJoin([ mEN.join(" "), H_en, tool.en, sty.en ]);
+    const romCore= safeJoin([ mROM.join(" "), H_rom, tool.rom, sty.rom ]);
+    const hanCore= safeJoin([ mHAN.join(" "), H_han, tool.han, sty.han ]);
+    const en = safeJoin([ stance ? (stance.en+" stance") : "", ",", enCore ], " ");
+    const rom = safeJoin([ stance ? (stance.rom+" sogi") : "", romCore ], ", ");
+    const han = safeJoin([ stance ? (stance.han+" 서기")  : "", hanCore ], ", ");
+    return { en, rom, han };
+  }
+
+  return {en:"—",rom:"—",han:"—"};
+}
+
+/* ================== UI LOGIC ================== */
+function setDisabled(el, on){ el.classList.toggle("disabled", on); Array.from(el.querySelectorAll("select")).forEach(s=>s.disabled=on); }
+
+function refreshFamilyViews(){
+  setDisabled(blockWrap, state.family!=="block");
+  setDisabled(strikeWrap, state.family!=="strike");
+  setDisabled(punchWrap, state.family!=="punch");
+  setDisabled(thrustWrap, state.family!=="thrust");
+  setDisabled(kickWrap, state.family!=="kick");
+}
+
+function refreshDirections(){
+  const bt = (state.family==="block" && state.blockType!=null) ? BLOCK_TYPES[state.blockType] : null;
+  const blockDirKeys = bt ? allowedBlockDirections(bt.key) : [];
+  const strikeDirKeys = DIR_ALLOWED.strike;
+
+  if(bt && blockDirKeys.length){
+    fillOptions(blockDirSel, filterDirections(blockDirKeys), d=>`${d.en} — ${d.rom} — ${d.han}`);
+    blockDirSel.disabled=false; blockDirWrap.classList.remove("disabled");
+    if(state.blockDir!=null) blockDirSel.value=String(state.blockDir);
+  } else {
+    blockDirSel.innerHTML='<option value="">(n/a)</option>'; blockDirSel.disabled=true; blockDirWrap.classList.add("disabled");
+    state.blockDir=null;
+  }
+
+  if(state.family==="strike" && strikeDirKeys.length){
+    fillOptions(strikeDirSel, filterDirections(strikeDirKeys), d=>`${d.en} — ${d.rom} — ${d.han}`);
+    strikeDirSel.disabled=false; strikeDirWrap.classList.remove("disabled");
+    if(state.strikeDir!=null) strikeDirSel.value=String(state.strikeDir);
+  } else {
+    strikeDirSel.innerHTML='<option value="">(n/a)</option>'; strikeDirSel.disabled=true; strikeDirWrap.classList.add("disabled");
+    state.strikeDir=null;
+  }
+}
+
+function refreshBlockTools(){
+  const bt = (state.blockType!=null) ? BLOCK_TYPES[state.blockType] : null;
+  if(!bt || !bt.tool){
+    blockToolSel.innerHTML='<option value="">(n/a)</option>'; blockToolSel.disabled=true; blockToolWrap.classList.add("disabled");
+    blockVarSel.innerHTML='<option value="">(n/a)</option>';  blockVarSel.disabled=true; blockVarWrap.classList.add("disabled");
+    state.blockTool=null; state.blockVar=null; return;
+  }
+
+  const toolList = BLOCK_TOOL_BASES.filter(t=>blockAllowedToolBases(bt.key).includes(t.key));
+  blockToolSel.innerHTML='<option value="">Choose…</option>';
+  toolList.forEach((t,i)=>{ const o=document.createElement("option"); o.value=String(i); o.textContent = `${t.en} — ${t.rom} — ${t.han}`; blockToolSel.appendChild(o); });
+  blockToolSel.disabled=false; blockToolWrap.classList.remove("disabled");
+
+  if(state.blockTool!=null && toolList[state.blockTool]) blockToolSel.value=String(state.blockTool); else { state.blockTool=null; blockToolSel.value=""; }
+
+  const base = (state.blockTool!=null) ? toolList[state.blockTool] : null;
+  const baseFull = base ? BLOCK_TOOL_BASES.find(b=>b.key===base.key) : null;
+  const vars = baseFull ? (baseFull.variants || []) : [];
+  if(vars.length){
+    blockVarSel.innerHTML='<option value="">Choose…</option>';
+    vars.forEach((v,i)=>{ const o=document.createElement("option"); o.value=String(i); o.textContent=v.en||"(default)"; blockVarSel.appendChild(o); });
+    blockVarSel.disabled=false; blockVarWrap.classList.remove("disabled");
+    if(state.blockVar!=null && vars[state.blockVar]) blockVarSel.value=String(state.blockVar);
+  } else {
+    blockVarSel.innerHTML='<option value="">(n/a)</option>'; blockVarSel.disabled=true; blockVarWrap.classList.add("disabled"); state.blockVar=null;
+  }
+}
+
+function refreshStrikeTools(){ 
+  fillOptions(strikeToolSel, STRIKE_TOOLS, t=>`${t.en} — ${t.rom} — ${t.han}`); 
+  strikeToolSel.disabled=false; 
+  if(state.strikeTool!=null) strikeToolSel.value=String(state.strikeTool);
+}
+function refreshPunch(){
+  fillOptions(punchStyleSel, PUNCH_STYLES, p=>`${p.en} — ${p.rom} — ${p.han}`);
+  fillOptions(punchToolSel,  PUNCH_TOOLS,  t=>`${t.en} — ${t.rom} — ${t.han}`);
+  punchStyleSel.disabled=false; punchToolSel.disabled=false;
+  if(state.punchTool==null){ state.punchTool=0; }
+  punchToolSel.value=String(state.punchTool);
+  if(state.punchStyle!=null) punchStyleSel.value=String(state.punchStyle);
+}
+function refreshThrust(){
+  fillOptions(thrustStyleSel, THRUST_STYLES, t=>`${t.en} — ${t.rom} — ${t.han}`);
+  fillOptions(thrustToolSel,  THRUST_TOOLS,  t=>`${t.en} — ${t.rom} — ${t.han}`);
+  thrustStyleSel.disabled=false; thrustToolSel.disabled=false;
+  if(state.thrustStyle!=null) thrustStyleSel.value=String(state.thrustStyle);
+  if(state.thrustTool!=null)  thrustToolSel.value=String(state.thrustTool);
+}
+function refreshKicks(){
+  fillOptions(kickTypeSel, KICKS, k=>`${k.en} — ${k.rom} — ${k.han}`);
+  kickTypeSel.disabled=false;
+  if(state.kickType!=null) kickTypeSel.value=String(state.kickType);
+  kickToolSel.innerHTML='<option value="">(n/a)</option>'; kickToolSel.disabled=true; kickToolWrap.classList.add("disabled"); state.kickTool=null;
+}
+function refreshKickTools(){
+  const kt = (state.kickType!=null) ? KICKS[state.kickType] : null;
+  if(!kt || !kt.feet.length){
+    kickToolSel.innerHTML='<option value="">(n/a)</option>'; kickToolSel.disabled=true; kickToolWrap.classList.add("disabled"); state.kickTool=null; return;
+  }
+  const list = FOOT_TOOLS.filter(f=>kt.feet.includes(f.key));
+  kickToolSel.innerHTML='<option value="">Choose…</option>';
+  list.forEach((f,i)=>{ const o=document.createElement("option"); o.value=String(i); o.textContent=`${f.en} — ${f.rom} — ${f.han}`; kickToolSel.appendChild(o); });
+  kickToolSel.disabled=false; kickToolWrap.classList.remove("disabled");
+  if(state.kickTool!=null && list[state.kickTool]) kickToolSel.value=String(state.kickTool); else { state.kickTool=null; kickToolSel.value=""; }
+}
+
+/* ===== Modifiers gating (Flying only for kicks; Reverse only hand+stance) ===== */
+function refreshModifiers(){
+  // reset UI
+  modsBox.innerHTML="";
+  MODS.forEach(m=>{
+    const lbl=document.createElement("label"); lbl.className="check";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.id="mod_"+m.key;
+    cb.onchange=()=>{ state.mods[m.key]=cb.checked; render(); };
+    lbl.appendChild(cb); lbl.appendChild(document.createTextNode(` ${m.en} / ${m.rom} / ${m.han}`));
+    modsBox.appendChild(lbl);
+  });
+
+  // Apply gating
+  const allow = { flying:false, reverse:false };
+  allow.flying = (state.family==="kick");
+  const hasStance = state.stance!=null;
+  const handFamily = (state.family==="punch" || state.family==="strike" || state.family==="thrust" || state.family==="block");
+  allow.reverse = handFamily && hasStance && state.family!=="kick"; // reverse for hand techniques only
+
+  // Disable/clear as needed
+  ["flying","reverse"].forEach(k=>{
+    const cb = document.getElementById("mod_"+k);
+    const enabled = allow[k];
+    cb.disabled = !enabled;
+    if(!enabled){ cb.checked=false; state.mods[k]=false; }
+    else cb.checked = !!state.mods[k];
+  });
+
+  // If Flying selected, stance should visually remain selectable but will be ignored in output.
+}
+
+/* ================== INIT ================== */
+function init(){
+  fillOptions(stanceSel, STANCES, s=>`${s.en} — ${s.rom} — ${s.han} 서기`);
+
+  [{key:"block",label:"Block"},{key:"strike",label:"Strike"},{key:"punch",label:"Punch"},{key:"thrust",label:"Thrust"},{key:"kick",label:"Kick"}]
+    .forEach(f=>{ const o=document.createElement("option"); o.value=f.key; o.textContent=f.label; familySel.appendChild(o); });
+
+  fillOptions(blockTypeSel, BLOCK_TYPES, b=>`${b.en} — ${b.rom} — ${b.han}`);
+  fillOptions(heightSel, HEIGHTS, h=>`${h.en} — ${h.rom} — ${h.han}`);
+
+  // Modifiers UI (built in refreshModifiers to respect gating)
+  refreshModifiers();
+
+  // Events
+  stanceSel.onchange = e => { state.stance = e.target.value===""?null:+e.target.value; refreshModifiers(); render(); };
+  familySel.onchange = e => {
+    state.family = e.target.value || null;
+
+    state.blockType=state.blockTool=state.blockVar=state.blockDir=null;
+    state.strikeTool=state.strikeDir=null;
+    state.punchStyle=null; state.punchTool=null;
+    state.thrustStyle=state.thrustTool=null;
+    state.kickType=state.kickTool=null;
+    state.mods.flying=false; // reset when switching family
+    state.mods.reverse=false;
+
+    refreshFamilyViews();
+    if(state.family==="block"){ setDisabled(blockWrap,false); }
+    if(state.family==="strike"){ setDisabled(strikeWrap,false); refreshStrikeTools(); }
+    if(state.family==="punch"){ setDisabled(punchWrap,false);  refreshPunch(); }
+    if(state.family==="thrust"){ setDisabled(thrustWrap,false); refreshThrust(); }
+    if(state.family==="kick"){ setDisabled(kickWrap,false);    refreshKicks(); }
+
+    refreshDirections(); refreshModifiers(); render();
+  };
+
+  blockTypeSel.onchange = e => { state.blockType = e.target.value===""?null:+e.target.value; state.blockTool=state.blockVar=state.blockDir=null; refreshBlockTools(); refreshDirections(); render(); };
+  blockToolSel.onchange = e => { state.blockTool = e.target.value===""?null:+e.target.value; state.blockVar=null; refreshBlockTools(); render(); };
+  blockVarSel.onchange  = e => { state.blockVar  = e.target.value===""?null:+e.target.value; render(); };
+  blockDirSel.onchange  = e => { state.blockDir  = e.target.value===""?null:+e.target.value; render(); };
+
+  strikeToolSel.onchange = e => { state.strikeTool = e.target.value===""?null:+e.target.value; render(); };
+  strikeDirSel.onchange  = e => { state.strikeDir  = e.target.value===""?null:+e.target.value; render(); };
+
+  punchStyleSel.onchange = e => { state.punchStyle = e.target.value===""?null:+e.target.value; render(); };
+  punchToolSel.onchange  = e => { state.punchTool  = e.target.value===""?null:+e.target.value; render(); };
+
+  thrustStyleSel.onchange = e => { state.thrustStyle = e.target.value===""?null:+e.target.value; render(); };
+  thrustToolSel.onchange  = e => { state.thrustTool  = e.target.value===""?null:+e.target.value; render(); };
+
+  kickTypeSel.onchange = e => { state.kickType = e.target.value===""?null:+e.target.value; state.kickTool=null; refreshKickTools(); refreshModifiers(); render(); };
+  kickToolSel.onchange  = e => { state.kickTool = e.target.value===""?null:+e.target.value; render(); };
+
+  heightSel.onchange = e => { state.height = e.target.value===""?null:+e.target.value; render(); };
+
+  refreshFamilyViews(); refreshDirections(); render();
+}
+
+function render(){
+  const out = buildOutput();
+  outEN.textContent = out.en;
+  outROM.textContent = out.rom;
+  outHAN.textContent = out.han;
+}
+
+window.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
